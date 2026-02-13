@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrainLink Party 🧠</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Nunito', sans-serif;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #feca57 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .glass-panel-dark {
+            background: rgba(30, 30, 60, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.5); }
+            50% { box-shadow: 0 0 40px rgba(102, 126, 234, 0.8); }
+        }
+        
+        .mode-card {
+            transition: all 0.3s ease;
+        }
+        
+        .mode-card:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+        
+        .mode-card.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .category-card {
+            transition: all 0.3s ease;
+        }
+        
+        .category-card:hover {
+            transform: translateY(-5px) scale(1.02);
+        }
+        
+        .category-card.selected {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .player-avatar {
+            transition: all 0.3s ease;
+        }
+        
+        .player-avatar:hover {
+            transform: scale(1.1);
+        }
+        
+        .word-bubble {
+            animation: popIn 0.5s ease-out;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .timer-bar {
+            transition: width 1s linear;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: confetti-fall 3s ease-out forwards;
+        }
+        
+        @keyframes confetti-fall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        .hidden-screen {
+            display: none !important;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .guess-card {
+            transition: all 0.2s ease;
+        }
+        
+        .guess-card:hover {
+            transform: translateX(10px);
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .guess-card.correct {
+            background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+            color: white;
+        }
+        
+        .guess-card.wrong {
+            background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+            color: white;
+        }
+        
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-gray-800 overflow-x-hidden">
+    <!-- Confetti Container -->
+    <div id="confetti-container" class="fixed inset-0 pointer-events-none z-50"></div>
+
+    <!-- Navigation -->
+    <nav class="glass-panel fixed top-0 left-0 right-0 z-40 px-4 py-3">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="showScreen('home')">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <i data-lucide="brain" class="w-6 h-6 text-white"></i>
+                </div>
+                <span class="font-black text-xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">BrainLink</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="showScreen('rules')" class="p-2 rounded-full hover:bg-gray-100 transition">
+                    <i data-lucide="help-circle" class="w-6 h-6 text-gray-600"></i>
+                </button>
+                <div id="game-code-display" class="hidden px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-mono text-sm font-bold">
+                    Code: <span id="current-game-code">----</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HOME SCREEN -->
+    <div id="screen-home" class="screen min-h-screen flex items-center justify-center px-4 pt-20">
+        <div class="max-w-4xl w-full">
+            <div class="text-center mb-12">
+                <div class="float-animation inline-block mb-6">
+                    <div class="w-32 h-32 mx-auto rounded-3xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center shadow-2xl">
+                        <i data-lucide="brain-circuit" class="w-16 h-16 text-white"></i>
+                    </div>
+                </div>
+                <h1 class="text-5xl md:text-7xl font-black mb-4 text-white drop-shadow-lg">
+                    BrainLink <span class="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-400">Party</span>
+                </h1>
+                <p class="text-xl text-white/90 font-semibold max-w-2xl mx-auto">
+                    Le jeu d'association où vos cerveaux se connectent ! 🧠⚡
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                <button onclick="showScreen('create')" class="glass-panel rounded-2xl p-8 text-left hover:scale-105 transition transform group">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center mb-4 group-hover:rotate-12 transition">
+                        <i data-lucide="plus-circle" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Créer une partie</h3>
+                    <p class="text-gray-600">Invite tes amis avec un code unique</p>
+                </button>
+
+                <button onclick="showScreen('join')" class="glass-panel rounded-2xl p-8 text-left hover:scale-105 transition transform group">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center mb-4 group-hover:rotate-12 transition">
+                        <i data-lucide="log-in" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-2">Rejoindre</h3>
+                    <p class="text-gray-600">Entre le code de ta partie</p>
+                </button>
+            </div>
+
+            <div class="mt-12 text-center">
+                <p class="text-white/80 text-sm">
+                    <i data-lucide="users" class="w-4 h-4 inline mr-1"></i>
+                    3-12 joueurs • <i data-lucide="clock" class="w-4 h-4 inline mr-1"></i> 15-30 min • <i data-lucide="smartphone" class="w-4 h-4 inline mr-1"></i> Téléphone friendly
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- CREATE GAME SCREEN -->
+    <div id="screen-create" class="screen hidden-screen min-h-screen px-4 pt-24 pb-8">
+        <div class="max-w-4xl mx-auto">
+            <button onclick="showScreen('home')" class="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i> Retour
+            </button>
+
+            <div class="glass-panel rounded-3xl p-8 mb-6">
+                <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                    <i data-lucide="settings" class="w-8 h-8 text-purple-600"></i>
+                    Configurer la partie
+                </h2>
+
+                <!-- Player List -->
+                <div class="mb-8">
+                    <label class="block text-lg font-bold mb-3">👥 Liste des joueurs</label>
+                    <div class="flex gap-2 mb-3">
+                        <input type="text" id="player-input" placeholder="Nom du joueur" 
+                            class="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none"
+                            onkeypress="if(event.key==='Enter') addPlayer()">
+                        <button onclick="addPlayer()" class="px-6 py-3 bg-purple-600 text-white rounded-xl font-bold hover:bg-purple-700 transition">
+                            <i data-lucide="plus" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="flex gap-2 mb-3">
+                        <button onclick="importPlayers()" class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-semibold hover:bg-gray-200 transition flex items-center gap-2">
+                            <i data-lucide="upload" class="w-4 h-4"></i> Importer liste
+                        </button>
+                        <button onclick="generateRandomPlayers()" class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-semibold hover:bg-gray-200 transition flex items-center gap-2">
+                            <i data-lucide="shuffle" class="w-4 h-4"></i> Aléatoire (démo)
+                        </button>
+                    </div>
+                    <div id="players-list" class="flex flex-wrap gap-2">
+                        <!-- Players will be added here -->
+                    </div>
+                    <p id="players-error" class="text-red-500 text-sm mt-2 hidden">Ajoute au moins 3 joueurs !</p>
+                </div>
+
+                <!-- Game Mode -->
+                <div class="mb-8">
+                    <label class="block text-lg font-bold mb-3">🎮 Mode de jeu</label>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div class="mode-card cursor-pointer rounded-2xl p-5 border-2 border-gray-200 hover:border-purple-400" onclick="selectMode('classic', this)" data-mode="classic">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center mb-3">
+                                <i data-lucide="link" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <h4 class="font-bold mb-1">Classique</h4>
+                            <p class="text-sm opacity-80">Associe un mot à un nom, les autres devinent</p>
+                        </div>
+                        <div class="mode-card cursor-pointer rounded-2xl p-5 border-2 border-gray-200 hover:border-purple-400" onclick="selectMode('reverse', this)" data-mode="reverse">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-400 to-rose-400 flex items-center justify-center mb-3">
+                                <i data-lucide="rotate-ccw" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <h4 class="font-bold mb-1">Inversé</h4>
+                            <p class="text-sm opacity-80">Devine qui a écrit chaque association</p>
+                        </div>
+                        <div class="mode-card cursor-pointer rounded-2xl p-5 border-2 border-gray-200 hover:border-purple-400" onclick="selectMode('chain', this)" data-mode="chain">
+                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center mb-3">
+                                <i data-lucide="git-branch" class="w-6 h-6 text-white"></i>
+                            </div>
+                            <h4 class="font-bold mb-1">Chaîne</h4>
+                            <p class="text-sm opacity-80">Les associations se transmettent en chaîne</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="mb-8">
+                    <label class="block text-lg font-bold mb-3">🏷️ Catégories <span class="text-sm font-normal text-gray-500">(sélectionne au moins une)</span></label>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="categories-grid">
+                        <!-- Categories will be generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div class="mb-8">
+                    <label class="block text-lg font-bold mb-3">⚙️ Paramètres</label>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Temps par manche (secondes)</label>
+                            <input type="range" id="timer-setting" min="15" max="120" value="45" class="w-full" oninput="document.getElementById('timer-value').textContent = this.value + 's'">
+                            <div class="text-center font-bold text-purple-600" id="timer-value">45s</div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2">Nombre de manches</label>
+                            <select id="rounds-setting" class="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none">
+                                <option value="3">3 manches</option>
+                                <option value="5" selected>5 manches</option>
+                                <option value="7">7 manches</option>
+                                <option value="10">10 manches</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="createGame()" class="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-black text-xl hover:shadow-xl hover:scale-[1.02] transition pulse-glow">
+                    <i data-lucide="rocket" class="w-6 h-6 inline mr-2"></i>
+                    Lancer la partie !
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JOIN GAME SCREEN -->
+    <div id="screen-join" class="screen hidden-screen min-h-screen flex items-center justify-center px-4 pt-20">
+        <div class="max-w-md w-full">
+            <button onclick="showScreen('home')" class="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i> Retour
+            </button>
+
+            <div class="glass-panel rounded-3xl p-8 text-center">
+                <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center mb-6">
+                    <i data-lucide="log-in" class="w-10 h-10 text-white"></i>
+                </div>
+                <h2 class="text-3xl font-black mb-2">Rejoindre une partie</h2>
+                <p class="text-gray-600 mb-6">Entre le code à 4 caractères</p>
+
+                <div class="flex gap-2 justify-center mb-6">
+                    <input type="text" id="join-code-1" maxlength="1" class="w-16 h-20 text-center text-3xl font-black rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none uppercase" oninput="focusNext(this, 'join-code-2')">
+                    <input type="text" id="join-code-2" maxlength="1" class="w-16 h-20 text-center text-3xl font-black rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none uppercase" oninput="focusNext(this, 'join-code-3')">
+                    <input type="text" id="join-code-3" maxlength="1" class="w-16 h-20 text-center text-3xl font-black rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none uppercase" oninput="focusNext(this, 'join-code-4')">
+                    <input type="text" id="join-code-4" maxlength="1" class="w-16 h-20 text-center text-3xl font-black rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none uppercase" oninput="joinGame()">
+                </div>
+
+                <div id="join-error" class="text-red-500 mb-4 hidden">Code invalide ou partie pleine</div>
+
+                <button onclick="joinGame()" class="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl font-bold text-lg hover:shadow-xl transition">
+                    Rejoindre
+                </button>
+
+                <div class="mt-6 p-4 bg-gray-50 rounded-xl">
+                    <p class="text-sm text-gray-600 mb-2">Pas de code ?</p>
+                    <button onclick="showScreen('create')" class="text-purple-600 font-bold hover:underline">Créer une partie</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOBBY SCREEN -->
+    <div id="screen-lobby" class="screen hidden-screen min-h-screen px-4 pt-24 pb-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="glass-panel rounded-3xl p-8 mb-6">
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-purple-100 mb-4">
+                        <span class="text-purple-700 font-semibold">Code de la partie</span>
+                        <span id="lobby-code" class="text-3xl font-black text-purple-800 tracking-widest">----</span>
+                        <button onclick="copyCode()" class="p-2 rounded-full hover:bg-purple-200 transition" title="Copier">
+                            <i data-lucide="copy" class="w-5 h-5 text-purple-700"></i>
+                        </button>
+                    </div>
+                    <p class="text-gray-600">Partage ce code avec tes amis pour qu'ils rejoignent !</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="users" class="w-5 h-5 text-purple-600"></i>
+                            Joueurs (<span id="lobby-player-count">0</span>)
+                        </h3>
+                        <div id="lobby-players" class="space-y-2">
+                            <!-- Players will be added here -->
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-xl font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="settings" class="w-5 h-5 text-purple-600"></i>
+                            Paramètres
+                        </h3>
+                        <div class="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Mode</span>
+                                <span id="lobby-mode" class="font-bold">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Catégories</span>
+                                <span id="lobby-categories" class="font-bold">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Temps/manche</span>
+                                <span id="lobby-timer" class="font-bold">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Manches</span>
+                                <span id="lobby-rounds" class="font-bold">-</span>
+                            </div>
+                        </div>
+
+                        <div id="host-controls" class="mt-6 space-y-3">
+                            <button onclick="startGameFromLobby()" class="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:shadow-lg transition">
+                                <i data-lucide="play" class="w-5 h-5 inline mr-2"></i>
+                                Démarrer la partie
+                            </button>
+                            <button onclick="showScreen('create')" class="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition">
+                                Modifier les paramètres
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME SCREEN - WRITE PHASE -->
+    <div id="screen-write" class="screen hidden-screen min-h-screen px-4 pt-24 pb-8">
+        <div class="max-w-2xl mx-auto">
+            <!-- Timer -->
+            <div class="glass-panel rounded-2xl p-4 mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-bold text-gray-600">Manche <span id="write-round">1</span>/<span id="write-total-rounds">5</span></span>
+                    <span id="write-timer" class="text-2xl font-black text-purple-600">45</span>
+                </div>
+                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="write-timer-bar" class="h-full bg-gradient-to-r from-purple-500 to-pink-500 timer-bar" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-8 text-center">
+                <div class="mb-6">
+                    <span class="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 font-bold text-sm mb-4">
+                        <i data-lucide="pen-tool" class="w-4 h-4 inline mr-1"></i>
+                        Phase d'écriture
+                    </span>
+                </div>
+
+                <div class="mb-8">
+                    <p class="text-gray-600 mb-4">Associe un mot de la catégorie à cette personne :</p>
+                    <div class="inline-block">
+                        <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center mb-4 shadow-lg">
+                            <span id="target-avatar" class="text-4xl">👤</span>
+                        </div>
+                        <h3 id="target-name" class="text-3xl font-black text-gray-800">-</h3>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-bold mb-4">
+                        <i data-lucide="tag" class="w-4 h-4"></i>
+                        <span id="current-category">-</span>
+                    </div>
+                    <p id="category-hint" class="text-sm text-gray-500 mb-4">-</p>
+                </div>
+
+                <div class="max-w-md mx-auto">
+                    <input type="text" id="association-input" placeholder="Ton association..." 
+                        class="w-full px-6 py-4 text-xl text-center rounded-2xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none mb-4"
+                        onkeypress="if(event.key==='Enter') submitAssociation()">
+                    <button onclick="submitAssociation()" class="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold text-lg hover:shadow-xl transition">
+                        Valider
+                    </button>
+                </div>
+
+                <div id="write-waiting" class="hidden mt-6 p-4 bg-green-50 rounded-xl">
+                    <p class="text-green-700 font-bold">
+                        <i data-lucide="check-circle" class="w-5 h-5 inline mr-2"></i>
+                        Association enregistrée ! En attente des autres joueurs...
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME SCREEN - GUESS PHASE -->
+    <div id="screen-guess" class="screen hidden-screen min-h-screen px-4 pt-24 pb-8">
+        <div class="max-w-2xl mx-auto">
+            <!-- Timer -->
+            <div class="glass-panel rounded-2xl p-4 mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="font-bold text-gray-600">Devinette</span>
+                    <span id="guess-timer" class="text-2xl font-black text-purple-600">30</span>
+                </div>
+                <div class="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="guess-timer-bar" class="h-full bg-gradient-to-r from-amber-400 to-orange-500 timer-bar" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-8">
+                <div class="text-center mb-8">
+                    <span class="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 font-bold text-sm mb-4">
+                        <i data-lucide="search" class="w-4 h-4 inline mr-1"></i>
+                        Phase de devinette
+                    </span>
+                    <p class="text-gray-600 mb-4">À qui correspond cette association ?</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 mb-8 text-center">
+                    <div class="inline-block px-4 py-2 rounded-full bg-white text-purple-600 font-bold text-sm mb-4 shadow-sm">
+                        <span id="guess-category">-</span>
+                    </div>
+                    <h3 id="guess-association" class="text-4xl md:text-5xl font-black text-gray-800 break-words">-</h3>
+                    <p class="text-sm text-gray-500 mt-4">Écrite par un joueur anonyme</p>
+                </div>
+
+                <div>
+                    <p class="text-center font-bold text-gray-600 mb-4">Clique sur le bon nom :</p>
+                    <div id="guess-options" class="grid gap-3">
+                        <!-- Options will be generated -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULTS SCREEN -->
+    <div id="screen-results" class="screen hidden-screen min-h-screen px-4 pt-24 pb-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-black text-white mb-2">Résultats 🎉</h2>
+                <p class="text-white/80">Manche <span id="result-round">1</span> terminée !</p>
+            </div>
+
+            <div id="results-container" class="space-y-4 mb-8">
+                <!-- Results will be generated -->
+            </div>
+
+            <div class="flex gap-4 justify-center">
+                <button id="next-round-btn" onclick="nextRound()" class="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl font-bold text-lg hover:shadow-xl transition">
+                    Manche suivante
+                    <i data-lucide="arrow-right" class="w-5 h-5 inline ml-2"></i>
+                </button>
+                <button id="final-scores-btn" onclick="showFinalScores()" class="hidden px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-2xl font-bold text-lg hover:shadow-xl transition">
+                    Voir les scores finaux
+                    <i data-lucide="trophy" class="w-5 h-5 inline ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FINAL SCORES SCREEN -->
+    <div id="screen-final" class="screen hidden-screen min-h-screen px-4 pt-24 pb-8">
+        <div class="max-w-2xl mx-auto">
+            <div class="glass-panel rounded-3xl p-8 text-center">
+                <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mb-6 shadow-lg">
+                    <i data-lucide="trophy" class="w-12 h-12 text-white"></i>
+                </div>
+                <h2 class="text-4xl font-black mb-2">Partie terminée !</h2>
+                <p class="text-gray-600 mb-8">Voici le classement final</p>
+
+                <div id="final-podium" class="space-y-3 mb-8">
+                    <!-- Podium will be generated -->
+                </div>
+
+                <div class="flex gap-4 justify-center">
+                    <button onclick="showScreen('home')" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition">
+                        Accueil
+                    </button>
+                    <button onclick="restartGame()" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-bold hover:shadow-lg transition">
+                        Rejouer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RULES SCREEN -->
+    <div id="screen-rules" class="screen hidden-screen min-h-screen px-4 pt-24 pb-8">
+        <div class="max-w-3xl mx-auto">
+            <button onclick="showScreen('home')" class="mb-6 flex items-center gap-2 text-white/80 hover:text-white transition">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i> Retour
+            </button>
+
+            <div class="glass-panel rounded-3xl p-8">
+                <h2 class="text-3xl font-black mb-6 flex items-center gap-3">
+                    <i data-lucide="book-open" class="w-8 h-8 text-purple-600"></i>
+                    Comment jouer ?
+                </h2>
+
+                <div class="space-y-6">
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl font-black text-purple-600">1</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Crée ou rejoins une partie</h3>
+                            <p class="text-gray-600">Invite tes amis avec un code à 4 caractères. 3 à 12 joueurs peuvent participer.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl font-black text-purple-600">2</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Phase d'écriture</h3>
+                            <p class="text-gray-600">Tu vois le nom d'une personne et une catégorie (objet, couleur, musique...). Écris ce à quoi ça te fait penser !</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl font-black text-purple-600">3</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Phase de devinette</h3>
+                            <p class="text-gray-600">Les associations anonymes s'affichent. Devine de qui il s'agit parmi la liste des joueurs !</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl font-black text-purple-600">4</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-lg mb-1">Gagne des points</h3>
+                            <p class="text-gray-600">+10 points si tu devines correctement. Bonus si plusieurs joueurs pensent comme toi !</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl">
+                    <h4 class="font-bold mb-3 flex items-center gap-2">
+                        <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500"></i>
+                        Conseils
+                    </h4>
+                    <ul class="space-y-2 text-gray-600 text-sm">
+                        <li>• Sois créatif dans tes associations pour surprendre les autres</li>
+                        <li>• Essaie de deviner le style de chaque joueur</li>
+                        <li• Plusieurs modes de jeu pour varier les plaisirs !</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
